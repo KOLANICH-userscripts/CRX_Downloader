@@ -6,8 +6,8 @@
 // @version				0.1
 // @author				KOLANICH
 // @copyright			KOLANICH, 2015 (based on http://chrome-extension-downloader.com/how-does-it-work.php and https://github.com/doraemonsk8ers/CRX_Downloader)
-// @homepageURL			https://github.com/KOLANICH/CRX_Downloader
 // @license				Unlicensed
+// @homepageURL			https://github.com/KOLANICH/CRX_Downloader
 // @contributionURL		https://github.com/KOLANICH/CRX_Downloader/fork
 // @contributionAmount	feel free to fork and contribute
 // @include				https://chrome.google.com/webstore/detail/*/*
@@ -40,7 +40,7 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 For more information, please refer to <http://unlicense.org/>*/
-
+"use strict";
 const downloadUriTemplate="https://clients2.google.com/service/update2/crx?response=redirect&prodversion=38.0&x=id%3D$ID$%26installsource%3Dondemand%26uc ";
 function parseAddonUri(path){
 	let a=path.split("/");
