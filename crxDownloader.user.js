@@ -12,7 +12,6 @@
 // @contributionAmount	feel free to fork and contribute
 // @include				https://chrome.google.com/webstore/detail/*/*
 // @noframes			1
-// @run-at				window-load
 // @optimize			1
 // ==/UserScript==
 
@@ -40,14 +39,15 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 For more information, please refer to <http://unlicense.org/>*/
+"use strict";
 
-const downloadUriTemplate="https://clients2.google.com/service/update2/crx?response=redirect&prodversion=38.0&x=id%3D$ID$%26installsource%3Dondemand%26uc ";
+const downloadUriTemplate="https://clients2.google.com/service/update2/crx?response=redirect&prodversion=$VER$&x=id%3D$ID$%26installsource%3Dondemand%26uc ";
+function getBrowserVersion() {
+    return window.navigator.userAgent.match(/Chrome\/([0-9.]+)/)[1];
+}
 function parseAddonUri(path){
 	let a=path.split("/");
-	return {download:downloadUriTemplate.replace("$ID$",a[a.length-1]),id:a[a.length-2]};
-}
-function getButton(){
-	return document.body.querySelector("div[role=button]");
+    return {download:downloadUriTemplate.replace("$ID$",a[a.length-1]).replace("$VER$",getBrowserVersion()),id:a[a.length-2]};
 }
 function getFilename(){
 	return getAddonName();
@@ -58,12 +58,12 @@ function getAddonName(){
 function replaceButton(){
 	let parsed=parseAddonUri(window.location.pathname);
 	let a=document.createElement("A");
-	a.download=parsed.id+".crx";
+	//a.download=parsed.id+".crx";
 	a.href=parsed.download;
 	a.textContent="Download .CRX";
-	
-	let btn=getButton();
-	a.className=btn.className;
-	btn.parentNode.replaceChild(a,btn);
+	a.style = 'display: block; margin-bottom: 1em;';
+
+	let descEl = document.querySelector('div[itemprop="description"]');
+	descEl.insertBefore(a, descEl.firstChild);
 }
 setTimeout(replaceButton,3000);
