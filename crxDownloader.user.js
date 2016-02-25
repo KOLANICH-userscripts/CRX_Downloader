@@ -3,16 +3,17 @@
 // @namespace			CRX_Downloader
 // @id					CRX_Downloader
 // @description			Allows downloading .crx'es from Google's Chrome Web Store
-// @version				0.1
+// @version				0.2
+// @grant				none
 // @author				KOLANICH
-// @copyright			KOLANICH, 2015 (based on http://chrome-extension-downloader.com/how-does-it-work.php and https://github.com/doraemonsk8ers/CRX_Downloader)
+// @copyright			KOLANICH, 2016 (based on http://chrome-extension-downloader.com/how-does-it-work.php and https://github.com/doraemonsk8ers/CRX_Downloader)
 // @license				Unlicensed
 // @homepageURL			https://github.com/KOLANICH/CRX_Downloader
 // @contributionURL		https://github.com/KOLANICH/CRX_Downloader/fork
 // @contributionAmount	feel free to fork and contribute
 // @include				https://chrome.google.com/webstore/detail/*/*
 // @noframes			1
-// @run-at				window-load
+// @run-at				document-idle
 // @optimize			1
 // ==/UserScript==
 
@@ -40,11 +41,42 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 For more information, please refer to <http://unlicense.org/>*/
+
 "use strict";
-const downloadUriTemplate="https://clients2.google.com/service/update2/crx?response=redirect&prodversion=38.0&x=id%3D$ID$%26installsource%3Dondemand%26uc ";
+const chromiumCachedVersion="48.0";
+const downloadUriBase="https://clients2.google.com/service/update2/crx";
+
+function detectChromium(){
+	let m=navigator.userAgent.match(/Chrome\/(\d+\.\d+)/);
+	return {
+		version:m?m[1]:chromiumCachedVersion,
+		chromium:!!m
+	};
+}
+const chromiumInfo=detectChromium();
+
+
+function assembleParams(params){
+	return Object.keys(params).map(p=>p+(params[p]?"="+encodeURIComponent(params[p]):"")).join("&");
+}
+function getAddonLink(id){
+	let a=document.createElement("A");
+	a.href=downloadUriBase;
+	a.search=assembleParams({
+		"response":"redirect",
+		"prodversion":chromiumInfo.version,
+		"x":assembleParams({
+			"id":id,
+			"installsource":"ondemand",
+			"uc":null
+		})
+	});
+	return a;
+}
+
 function parseAddonUri(path){
 	let a=path.split("/");
-	return {download:downloadUriTemplate.replace("$ID$",a[a.length-1]),id:a[a.length-2]};
+	return {ID:a[a.length-1],hrID:a[a.length-2]};
 }
 function getButton(){
 	return document.body.querySelector("div[role=button]");
@@ -53,17 +85,21 @@ function getFilename(){
 	return getAddonName();
 }
 function getAddonName(){
-	return document.getElementsByTagName("H1")[0].textContent
+	return document.getElementsByTagName("H1")[0].textContent;
 }
-function replaceButton(){
+function injectDownloadLink(){
 	let parsed=parseAddonUri(window.location.pathname);
-	let a=document.createElement("A");
-	a.download=parsed.id+".crx";
-	a.href=parsed.download;
+	let a=getAddonLink(parsed.ID);
+	a.download=parsed.hrID+".crx";
 	a.textContent="Download .CRX";
-	
 	let btn=getButton();
 	a.className=btn.className;
-	btn.parentNode.replaceChild(a,btn);
+	
+	if(!chromiumInfo.chromium){
+		btn.parentNode.replaceChild(a,btn);
+	}else{
+		btn.parentNode.insertBefore(a,btn);
+		btn.style.margin=(btn.nextSibling.getBoundingClientRect().left-btn.getBoundingClientRect().right)+"px";
+	}
 }
-setTimeout(replaceButton,3000);
+setTimeout(injectDownloadLink,3000);
